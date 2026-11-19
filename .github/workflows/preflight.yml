@@ -1,0 +1,18 @@
+name: Repository preflight
+on:
+  push:
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check project integrity
+        run: node scripts/preflight.mjs
+      - name: Verify alert identity and lifecycle invariants
+        run: node --experimental-strip-types --test packages/incident-engine/test/*.test.mjs
