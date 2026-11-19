@@ -100,9 +100,9 @@ The documented local monitoring stack is intentionally a **work in progress**: d
 
 A public GitHub repository, open source license, functional accessible application, public YouTube demo under 3 minutes, and `.kiro/` at the root are required. Full deliverables are in [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
 
-## Publishing after creating the empty repository
+## Repository
 
-From this extracted source directory, run `bash scripts/publish-to-github.sh`. It refuses to push if the configured `origin` points to a different repository. GitHub authentication is required on your machine; no credentials are stored in this repo.
+Source, Kiro specs and implementation backlog are published at [chandrakantdubey/project-reanimate](https://github.com/chandrakantdubey/project-reanimate). Clone the repository with `git clone https://github.com/chandrakantdubey/project-reanimate.git`, then follow the quick start and open GitHub Issues for milestone progress.
 
 ## Security stance
 
