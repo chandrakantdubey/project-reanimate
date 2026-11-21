@@ -1,6 +1,6 @@
 # Project Reanimate — Kiro Build Brief
 
-**State: design and direction only. No application scaffold has been committed on the current branch. Kiro will design, generate, implement, and validate the actual system.**
+**State: design and direction only. The current working tree contains no application scaffold or `.kiro/` artifacts; earlier scaffolding remains only in Git history. Kiro will design, generate, implement, and validate the actual system.**
 
 > Autonomous incident investigation. Human-approved recovery.
 
