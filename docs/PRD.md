@@ -1,7 +1,7 @@
 # Product Requirements — Project Reanimate
 
 **Version:** v0.1 / 2026-11-19  
-**Status:** Approved direction, implementation in progress  
+**Status:** Direction approved; implementation not started in this repository (Kiro will generate it)  
 **Primary personas:** on-call SRE, platform engineer, backend engineer, hackathon judge
 
 ## Product promise

@@ -1,10 +1,10 @@
-# GitHub Issue Seeds (create after repository is available)
+# Implementation Backlog for Kiro
 
-Each issue is scoped to a demonstrable slice, references a Kiro spec, and should close with a recorded test run rather than a PR description alone.
+The GitHub issues are task directions only. Kiro must generate `.kiro/` specs and all implementation artifacts before attempting these milestones. Close issues only on observed results, not on file creation alone.
 
 ## #1 — Foundation reproducibility (P0 / M0)
 
-**Goal:** `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm test` and `docker compose config` pass on a clean machine. Generate lockfile; fix actual dependency/version incompatibilities; add typecheck CI and dependency scan. **Done:** PR records command outputs, CI green, documented environment setup.
+**Goal:** `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm test` and `docker compose config` pass on a clean machine. Kiro creates the workspace and lockfile from scratch; adds typecheck CI and dependency scanning; fixes discovered version incompatibilities. **Done:** PR records command outputs, CI green, documented environment setup.
 
 ## #2 — Authenticated and idempotent real alerts (P0 / M1)
 

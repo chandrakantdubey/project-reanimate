@@ -1,28 +1,24 @@
-# Local Development — bootstrap stage
+# Local Development — Target Requirements (No Scaffold Yet)
 
-**Current limitation:** not yet executed in a registry-enabled Docker environment. These are target commands that need M0/M1 integration testing, not a promise that a full stack runs today.
+**No local-development automation is checked in.** Kiro must generate the monorepo, package manifests, secrets bootstrap, Docker Compose, observability configuration, tests and commands. The following is the intended acceptance sequence, not a runnable quickstart.
 
-## Prerequisites
+## Developer experience to create
 
-Node.js >=22, pnpm >=10, Docker Engine/Compose, Git, and Kiro IDE/CLI. Keep this isolated from work/production infrastructure.
+1. Clean clone and documented prerequisites (Node.js, pnpm, Docker Engine/Compose and optionally Kind).
+2. Deterministic setup using generated scripts with safe local-only credentials; never commit secrets.
+3. Frozen-lockfile dependency install; lint, typecheck, unit tests and dependency/security checks.
+4. Start PostgreSQL/Redis and telemetry services, generate/apply schema migrations, run backend/worker/frontend and checkout/payment demo.
+5. Verify health/readiness checks and that all telemetry targets report correctly.
+6. Generate healthy traffic, inject the timeout regression, see a real alert and persisted incident.
+7. Replay the scenario from a clean environment without manual database edits or secret hardcoding.
 
-## Setup plan
+## Required verification once Kiro implements it
 
-1. Run `node scripts/bootstrap-local.mjs` to create `.env` and the mounted Alertmanager secret with random credentials. Do not commit `.env`.
-2. Install with `pnpm install`, commit generated `pnpm-lock.yaml`, run `pnpm typecheck` and `pnpm test`.
-3. Start PostgreSQL and Redis using `docker compose up -d postgres redis` (when Compose file is validated).
-4. Generate and apply Drizzle migrations (`pnpm db:generate`, `pnpm db:migrate`).
-5. Start API, web and worker via `pnpm dev` in root, or workspace filters.
-6. Start Prometheus + Alertmanager; ensure receiver has authorized path to API. In local Linux Docker this may require `host.docker.internal:host-gateway`.
-7. Start demo checkout, generate traffic, and verify test alert webhook and incident UI.
+- API liveness and database-aware readiness behave as documented.
+- Alert ingestion rejects invalid authentication and oversized payloads.
+- Ten identical webhook deliveries create one incident and one deduplicated investigation.
+- DB/Redis/provider outages degrade safely; transient work is reconciled after restart.
+- The UI reflects persisted telemetry and clearly distinguishes replay from live.
+- Clean-clone setup and test commands work on a developer machine and in CI.
 
-## Operational checks
-
-- `curl localhost:4000/healthz` -> `ok: true`.
-- `curl localhost:4000/readyz` -> DB ready, or service unavailable.
-- `curl localhost:4000/v1/incidents` -> persisted rows or empty JSON list.
-- Prometheus `/targets`: checkout target up.
-- Alertmanager active alert appears only during regression.
-- Invalid bearer on `/internal/alerts` -> HTTP 401.
-
-No default demo password/token should be considered secure outside local development. Production deployment requires isolated network access and real authentication.
+Exact generated commands must be documented here by Kiro after they have been tested, rather than prescribing nonexistent script paths today.

@@ -31,7 +31,7 @@ sequenceDiagram
   API-->>UI: persisted incident & state
 ```
 
-**Known bootstrap gap:** v0 scaffold writes DB state then queues jobs; a crash between commits can lose scheduling. Before claiming reliable delivery, implement a transactional outbox in PostgreSQL and polling dispatcher. See [ADR 0002](adr/0002-outbox.md).
+**Reliability requirement:** Kiro must implement a transactional outbox in PostgreSQL and a polling dispatcher. A DB-to-queue dual write risks lost scheduling across crashes; see [ADR 0002](adr/0002-outbox.md). No existing scaffold is assumed.
 
 ## Correlation strategy
 
