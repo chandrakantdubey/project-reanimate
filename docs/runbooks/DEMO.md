@@ -12,12 +12,11 @@
 8. Authorized human reviews diff and creates draft PR in the demo repository.
 9. Optional: manually deploy approved fix and show metrics recovering. Never auto-merge as part of the demo.
 
-## Guardrails for recording
+## Execution guardrails
 
 - Use a dedicated throwaway GitHub demo repository and simulated services, never employer systems.
 - Capture real terminal/UI events; do not edit a synthetic time series to mimic success.
 - Label replay footage if used. Use a pre-recorded authentic incident to avoid demo instability.
-- Keep the primary 3-minute video focused on one narrative and one working run.
 
 ## Fallbacks
 

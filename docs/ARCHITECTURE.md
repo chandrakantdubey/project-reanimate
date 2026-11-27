@@ -31,7 +31,7 @@ sequenceDiagram
   API-->>UI: persisted incident & state
 ```
 
-**Reliability requirement:** Kiro must implement a transactional outbox in PostgreSQL and a polling dispatcher. A DB-to-queue dual write risks lost scheduling across crashes; see [ADR 0002](adr/0002-outbox.md). No existing scaffold is assumed.
+**Reliability requirement:** Implement a transactional outbox in PostgreSQL and a polling dispatcher. A DB-to-queue dual write risks lost scheduling across crashes; see [ADR 0002](adr/0002-outbox.md).
 
 ## Correlation strategy
 
@@ -71,7 +71,7 @@ The incident has a *separate* lifecycle (`firing`, `acknowledged`, `resolved`); 
 ## Deployment topology
 
 - **Local:** PostgreSQL, Redis, Prometheus, Alertmanager, OTel collector and simulated checkout via Docker Compose; Node processes via pnpm for hot reload. Kind is optional for Kubernetes event correlation.
-- **Judge-facing:** frontend and read-only API backed by a curated incident replay, without service credentials or arbitrary execution access.
+- **Public replay:** frontend and read-only API backed by a curated incident replay, without service credentials or arbitrary execution access.
 - **After MVP:** separate private control API, worker with network isolation, managed Postgres/Redis, restricted GitHub App installation and model gateway. Cloud deploy is explicit opt-in.
 
 ## Failure and resilience patterns
@@ -91,7 +91,7 @@ The incident has a *separate* lifecycle (`firing`, `acknowledged`, `resolved`); 
 
 ## Scale and capacity assumptions
 
-MVP: 1–5 services, 100–1000 RPS synthetic traffic, 1 alert episode/minute, 1–5 concurrent investigations. Each incident collects at most 200 trace spans, 400 log lines and 10 metrics series into bounded evidence snapshots. A typical investigation should stay below 100 KB curated textual context; raw telemetry lives in its backend, not the Postgres incident row.
+MVP: 1–5 services; local baseline 5–20 RPS, optional load testing at 100–1000 RPS, 1 alert episode/minute, 1–5 concurrent investigations. Each incident collects at most 200 trace spans, 400 log lines and 10 metrics series into bounded evidence snapshots. A typical investigation should stay below 100 KB curated textual context; raw telemetry lives in its backend, not the Postgres incident row.
 
 At 1000 incidents/day with 200 KB evidence metadata/snapshots each: roughly 200 MB/day logical data before indexes/replication (illustrative). Retention: evidence snapshots 14 days by default, audit trail 90 days, summaries 90 days; configurable with privacy requirements. Redis is not authoritative.
 

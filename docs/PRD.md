@@ -1,8 +1,7 @@
 # Product Requirements — Project Reanimate
 
 **Version:** v0.1 / 2026-11-19  
-**Status:** Direction approved; implementation not started in this repository (Kiro will generate it)  
-**Primary personas:** on-call SRE, platform engineer, backend engineer, hackathon judge
+**Primary personas:** on-call SRE, platform engineer, backend engineer, public replay viewer
 
 ## Product promise
 
@@ -30,7 +29,7 @@ A deterministic alert becomes a traceable investigation with sourced hypotheses 
 
 ## In scope / out of scope
 
-| In MVP | Later, not for first deadline |
+| In MVP | Future scope |
 | --- | --- |
 | One checkout/service outage, reproducible failure injection | Arbitrary multi-service incident coverage |
 | One local Kind/Compose deployment and one GitHub repo | Multi-region multi-cloud control plane |
@@ -38,7 +37,7 @@ A deterministic alert becomes a traceable investigation with sourced hypotheses 
 | Deterministic correlation + bounded LLM hypothesis | Unconstrained free-form autonomous agents |
 | Whitelisted configuration/code patch | Production `kubectl` write actions |
 | Isolated validation, human-approved draft PR | Automatic merge, deployment, rollback |
-| Public read-only judge replay + private live mode | Full enterprise SSO, billing, tenancy features |
+| Public read-only replay + private live mode | Full enterprise SSO, billing, tenancy features |
 
 ## Priorities / functional requirements
 
@@ -53,9 +52,8 @@ A deterministic alert becomes a traceable investigation with sourced hypotheses 
 - **FR-07 Verification:** Proposed patch must pass allowlisted-path policy and isolated build/tests before `ready_for_review` state.
 - **FR-08 Approval:** An authenticated human reviews full diff and initiates draft-PR creation; no background agent may bypass this step.
 - **FR-09 UX:** The incident workspace renders accurate state and evidence, with loading/error states, keyboard access and replay labels.
-- **FR-10 Replay:** Public judge replay uses captured data, no privileged connections, and visible indication that it is a replay.
+- **FR-10 Replay:** Public replay uses captured data, no privileged connections, and visible indication that it is a replay.
 - **FR-11 Audit:** Every critical state transition and external action records who/what caused it and its correlation ID.
-- **FR-12 Kiro:** Tasks, technical design, steering and hooks are committed at project root; meaningful development uses Kiro.
 
 ### P1 — if P0 is complete early
 
@@ -64,7 +62,7 @@ A deterministic alert becomes a traceable investigation with sourced hypotheses 
 - Verified recovery signal after an approved fix is manually deployed.
 - Basic policy editor and repository installation UI.
 
-### P2 — post-hackathon
+### P2 — future scope
 
 Multi-tenant RBAC, several providers/cluster integrations, incident search, SLO budgets, cross-region handling, risk-based auto-approval, incident learning, change replay and anomaly detection.
 
@@ -78,7 +76,7 @@ Multi-tenant RBAC, several providers/cluster integrations, incident search, SLO 
 | Availability | survive worker restart without losing persisted incident |
 | Idempotency | zero duplicate incidents/PRs under 10 webhook replays |
 | Security | zero plaintext secrets in repo or model context |
-| Cost | default LLM cap of 2 analyses per incident; budget and token metering |
+| Cost | maximum 2 analysis calls plus 1 schema-repair call per incident; budget and token metering |
 | Observability | logs/metrics/traces for API, worker, webhook, AI and PR creation |
 | Accessibility | keyboard navigation and WCAG AA contrast in core workflows |
 
@@ -96,4 +94,4 @@ Multi-tenant RBAC, several providers/cluster integrations, incident search, SLO 
 - Live data can be incomplete; model must handle missing logs/traces rather than fill gaps.
 - GitHub API and LLM rate limits exist; retries and circuit breakers required.
 - A successful test suite does **not** prove a production fix is correct; UI must preserve this distinction.
-- Date-specific implementation priority is defined by [ROADMAP](ROADMAP.md).
+- Implementation priority is defined by [ROADMAP](ROADMAP.md).

@@ -41,4 +41,4 @@ Within one SQL transaction: validate state transition, update incident, append a
 
 ## Retention / backup
 
-Evidence metadata + bounded excerpts: 14 days; incident summaries: 90 days; audit: 90 days for the demo (configurable after productization). Use Postgres PITR and daily snapshots for real deployments. Redis can be rebuilt from pending outbox. Treat restore exercises as part of post-hackathon hardening.
+Evidence metadata + bounded excerpts: 14 days; incident summaries: 90 days; audit: 90 days for the demo (configurable after productization). Use Postgres PITR and daily snapshots for real deployments. Redis can be rebuilt from pending outbox. Treat restore exercises as part of operational hardening.

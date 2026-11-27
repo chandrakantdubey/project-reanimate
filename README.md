@@ -1,65 +1,66 @@
-# Project Reanimate — Kiro Build Brief
-
-**State: design and direction only. The current working tree contains no application scaffold or `.kiro/` artifacts; earlier scaffolding remains only in Git history. Kiro will design, generate, implement, and validate the actual system.**
+# Project Reanimate
 
 > Autonomous incident investigation. Human-approved recovery.
 
-Project Reanimate is an AI-powered reliability engineering platform that connects Kubernetes, OpenTelemetry, GitHub and LLM-assisted investigation. The goal is to detect production-like failures, reconstruct an evidence-backed root cause, and produce a tested remediation pull request without granting an AI agent production write privileges.
+Project Reanimate is an AI-powered reliability engineering platform that connects application telemetry, infrastructure events and source code to turn alerts into evidence-backed investigations and verified remediation proposals.
 
-## Ownership boundary
+## Core workflow
 
-**This repository provides direction, not starter code.** The existing `docs/` material describes the desired product, constraints and acceptance criteria; it is not evidence of working integrations. There should be no hand-authored application code, `.kiro/` workspace, infrastructure configuration, dependency manifest, workflow or scripts before Kiro starts.
+1. Detect a service failure through Prometheus and Alertmanager.
+2. Persist and deduplicate the incident.
+3. Correlate metrics, logs, traces and GitHub deployment history.
+4. Generate ranked root-cause hypotheses with evidence, alternatives and explicit uncertainty.
+5. Propose a minimally scoped patch and validate it in an isolated sandbox.
+6. Obtain explicit human approval and open an idempotent draft pull request.
 
-**Kiro must create `.kiro/` itself**, including any specs, steering, agents, hooks or task plans it decides are appropriate. Kiro must also create every application, test, package, CI and deployment artifact. The eventual hackathon submission requires `.kiro/` at the repository root; this initial direction-only state intentionally does not contain it.
+The platform never automatically merges, deploys or modifies production infrastructure.
 
-## The user journey to build
+## Architecture
 
-1. Operate a real, instrumented checkout and payment demo in a local, isolated environment.
-2. Inject a reproducible regression: checkout payment-client timeout changes from 800 ms to 100 ms while downstream latency is approximately 300 ms.
-3. Detect increased HTTP 5xx rates through metrics and a real alert; deduplicate repeat webhook deliveries into a single incident.
-4. Correlate alert times, spans, bounded log evidence and GitHub deployment/commit history into a navigable incident timeline.
-5. Produce structured root-cause hypotheses with valid evidence references, alternatives, confidence limitations and an explicit insufficient-evidence outcome.
-6. Propose an allowlisted code/config patch, run it in an isolated no-secrets sandbox, and record the tests and policy checks.
-7. After explicit human approval, open an idempotent **draft** GitHub PR. Never auto-merge, auto-deploy or write to a production cluster.
-8. Offer a **clearly labelled, public read-only replay** of an authentic recorded incident for judges without exposing integrations or secrets.
+| Component | Technology |
+| --- | --- |
+| Web application | Next.js, TypeScript |
+| Control API | Fastify |
+| Persistence | PostgreSQL |
+| Background processing | Redis, BullMQ, transactional outbox |
+| Observability | OpenTelemetry, Prometheus, Alertmanager, Loki, Tempo |
+| Source control | GitHub App |
+| Investigation | Provider-neutral LLM adapter, structured output |
+| Local environment | Docker Compose, optional Kubernetes/Kind |
 
-## Architectural direction (not existing implementation)
+## MVP scenario
 
-- TypeScript monorepo; Next.js web UI, Fastify API, worker; shared typed contracts.
-- PostgreSQL as source of truth; Redis/BullMQ for dispatch, transactional outbox for durable scheduling.
-- OpenTelemetry Collector, Prometheus, Loki, Tempo, Alertmanager for telemetry and alert delivery.
-- GitHub App with least-privilege repository permissions and a provider-agnostic LLM adapter.
-- Docker Compose first for local repeatability; Kubernetes/Kind integration where it adds demonstrable value.
-- Distinguish public replay, private live UI, ingest endpoints and isolated patch execution as separate trust boundaries.
+An instrumented checkout service calls a payment service with approximately 300 ms latency. A deployment changes the checkout timeout from 800 ms to 100 ms, causing measurable HTTP 5xx failures. Reanimate detects the incident, correlates telemetry with the deployment, proposes a timeout correction, runs regression tests and opens a draft PR after approval.
 
-The rationale and alternatives are in the architecture decisions. Kiro should challenge or refine choices in its own design phase, documenting consequential changes rather than silently diverging.
+A public read-only replay provides access to an authentic recorded investigation without exposing private integrations or credentials.
 
-## Non-negotiable engineering requirements
+## Documentation
 
-- Deterministic alert episode identity, idempotency, state transitions and retry/reconciliation behavior.
-- Never present simulated or replay data as live production data.
-- Evidence must be linkable, timestamped, bounded and redacted; untrusted log/repository text cannot override instructions.
-- LLM output is an untrusted proposal; every cited evidence ID must be validated.
-- All model/observability/GitHub calls have explicit budgets, timeouts and actionable failure states.
-- Test failures, missing approval, policy violations and sandbox errors must block PR creation.
-- No autonomous deployments, Kubernetes mutations, or secret-bearing patch runners.
-- Automated unit, integration and real end-to-end acceptance tests; honest validation status.
+| Document | Purpose |
+| --- | --- |
+| [Product requirements](docs/PRD.md) | Scope, workflows and functional requirements |
+| [Architecture](docs/ARCHITECTURE.md) | Components, data flow, lifecycle and resilience |
+| [Data model](docs/DATA_MODEL.md) | Persistence, consistency and retention |
+| [API contract](docs/API.md) | Endpoints, authentication and payloads |
+| [AI investigation](docs/AI_ENGINE.md) | Evidence collection, reasoning and evaluation |
+| [Security](docs/SECURITY.md) | Threat model, isolation and approval policy |
+| [Capacity and operations](docs/CAPACITY_AND_OPERATIONS.md) | Resource budgets, scaling and recovery |
+| [Interface design](docs/design/INTERFACE.md) | Mission Control and incident review |
+| [Local development](docs/LOCAL_DEVELOPMENT.md) | Development environment requirements |
+| [Roadmap](docs/ROADMAP.md) | Ordered implementation milestones |
+| [Acceptance criteria](docs/ACCEPTANCE.md) | Testable release requirements |
+| [Demo runbook](docs/runbooks/DEMO.md) | Reproducible end-to-end scenario |
 
-## Read the blueprint in this order
+### Architecture decisions
 
-1. [Kiro handoff and first prompt](docs/KIRO_HANDOFF.md)
-2. [Product requirements](docs/PRD.md) and [acceptance criteria](docs/ACCEPTANCE.md)
-3. [System architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md) and [API contract](docs/API.md)
-4. [AI investigation](docs/AI_ENGINE.md), [security](docs/SECURITY.md), [capacity and operations](docs/CAPACITY_AND_OPERATIONS.md)
-5. [Mission Control interface](docs/design/INTERFACE.md), [demo scenario](docs/runbooks/DEMO.md)
-6. [Roadmap](docs/ROADMAP.md), [issue backlog](docs/GITHUB_ISSUES.md), [architecture decisions](docs/adr/)
+- [Modular control plane](docs/adr/0001-control-plane.md)
+- [Transactional outbox](docs/adr/0002-outbox.md)
+- [Human-approved remediation](docs/adr/0003-human-approval.md)
 
-## Definition of done
+## Development status
 
-Not 'files generated'. Success means a clean clone starts the stack; a healthy service develops a measured failure; a genuine alert creates exactly one durable incident; investigators can inspect real supporting evidence; an approved, sandbox-validated fix opens exactly one draft PR; and a read-only replay is independently accessible. The checklist lives in [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
+The documents describe the intended implementation and acceptance criteria. They are not claims of currently available features.
 
-## Kiro working agreement
+## License
 
-Start from [docs/KIRO_HANDOFF.md](docs/KIRO_HANDOFF.md). Kiro should create and own `.kiro/`, implementation, tests, infrastructure, scripts and CI in subsequent commits. Review specs and architecture before code, implement vertical slices with observed test results, preserve the documented safety boundaries, and record actual Kiro contributions in [docs/KIRO_USAGE.md](docs/KIRO_USAGE.md).
-
-License: [MIT](LICENSE).
+[MIT](LICENSE)

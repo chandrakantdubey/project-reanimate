@@ -18,8 +18,6 @@ All endpoints except `/healthz`, `/readyz` and explicitly read-only Replay endpo
 | `POST` | `/v1/proposals/:id/pull-request` | open draft PR after verification and approval | role-based approval + idempotency key |
 | `GET` | `/v1/replay/incidents/:slug` | curated public fixture | anonymous, read-only |
 
-**Status:** Target API contract only. Kiro must implement all endpoints and their tests; none are currently provided by this direction-only repository.
-
 ## Example Alertmanager payload
 
 ```json

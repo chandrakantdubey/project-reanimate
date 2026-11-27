@@ -1,4 +1,4 @@
-# Acceptance, Demo and Submission Gates
+# Acceptance and Release Criteria
 
 ## First meaningful slice — pass/fail
 
@@ -22,16 +22,13 @@
 - [ ] Replay is clearly marked and public; live pipeline is separately demonstrated.
 - [ ] Negative tests: forged webhook, duplicate webhook, dangerous patch, poisoned log, repeated PR request.
 
-## Presentation checklist
+## Release readiness
 
-- [ ] Public running website or test build with judge access and documented entry steps.
-- [ ] Public GitHub repository, root `.kiro/`, and repository-level recognized open-source `LICENSE`.
-- [ ] <3 minute YouTube video with actual on-screen application functionality.
-- [ ] Devpost description and Frankenstein positioning: OTel + Kubernetes + GitHub + agentic intelligence.
-- [ ] Kiro usage explained with concrete artifacts (specs, steering, hooks, actual implementation history).
-- [ ] Launch deadline: 2026-12-04 22:00 UTC (2026-12-05 03:30 IST). Verify in Devpost before final submit.
-- [ ] Read-only public replay does not expose API tokens, production logs or secrets.
-- [ ] Repository README quickstart works on clean machine; CI green.
+- [ ] Clean-clone setup and documented prerequisites work; CI is green.
+- [ ] Public read-only replay is accessible without credentials.
+- [ ] No secrets or private telemetry are exposed in replay, logs or source control.
+- [ ] Integration, security, accessibility and end-to-end checks have observed results.
+- [ ] Known limitations and failure modes are documented.
 
 ## Measurable demos
 
