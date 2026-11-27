@@ -6,7 +6,7 @@ These are design envelopes and targets, **not measured benchmark results**.
 
 - 2 simulated services, load generator at 5–20 RPS checkout; upstream can tolerate 300 ms payment latency.
 - Prometheus scrapes every 5 seconds, stores roughly 4,000–20,000 time-series samples/minute depending on default runtime metrics; inspect actual cardinality before tuning.
-- One expected incident in the demo, repeated Alertmanager webhooks, two concurrent worker jobs maximum.
+- One active lab run and expected incident at a time; two sequential fault scenarios, repeated Alertmanager webhooks, two concurrent worker jobs maximum. Cap traffic at 20 RPS by default and enforce configurable run TTL (initial target 5 minutes), cleanup and baseline readiness before another run.
 - PostgreSQL stores compact alerts/evidence metadata, not arbitrary full logs/traces. Tempo holds trace bodies.
 
 ## Back-of-envelope at moderate scale
@@ -41,6 +41,8 @@ Under excess alerts, shed optional enrichments before dropping authoritative inc
 Single write-primary region first. If multi-region later, assign each project a home region; route mutations there and use read replicas + backup restore elsewhere. Do not attempt active-active incident mutation without conflict-resolution design. Restrict outbound adapters to allowlisted endpoints; never expose raw kubeconfig to workers.
 
 ## Operational controls
+
+Monitor lab run duration, active traffic, reset failures, lease expiry and workload readiness. Public replay should have negligible provider cost; public live lab requires explicit concurrency and spend caps.
 
 Expose integration health, queue age, oldest pending action, provider availability and investigation spend to operators. Preserve alert ingestion when optional AI enrichment is unavailable. Provide bounded retry/reconciliation, explicit terminal failure and authorized retry. Backups must include durable state and evidence artifacts; verify restoration and rebuild queue work from durable intent and completion receipts.
 

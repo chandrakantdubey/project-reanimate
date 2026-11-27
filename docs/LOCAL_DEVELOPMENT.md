@@ -4,7 +4,7 @@
 
 Use a TypeScript monorepo with Node.js, pnpm and Docker Compose. Pin supported runtime and dependency versions and commit the lockfile. Kubernetes/Kind is optional for infrastructure-event correlation.
 
-The local stack consists of the web application, API, dispatcher/worker, PostgreSQL, Redis, OpenTelemetry Collector, Prometheus, Alertmanager, Loki, Tempo, checkout and payment services, and an isolated verification runner.
+The local stack consists of the web application, API, dispatcher/worker, PostgreSQL, Redis, OpenTelemetry Collector, Prometheus, Alertmanager, Loki, Tempo, Shop storefront, checkout and payment services, a protected lab controller, and an isolated verification runner.
 
 ## Workspace boundaries
 
@@ -14,7 +14,7 @@ The local stack consists of the web application, API, dispatcher/worker, Postgre
 | API | Authentication, input validation, durable state and action endpoints |
 | Worker | Evidence retrieval, investigation and external-action reconciliation |
 | Shared packages | Contracts, persistence, incident logic and provider adapters |
-| Demo services | Instrumented checkout/payment workload and regression controls |
+| Shop and Lab | Synthetic storefront, instrumented checkout/payment workload, bounded traffic and isolated fault controls |
 | Infrastructure | Local dependencies, telemetry pipelines and alert rules |
 | Tests | Contract, property-based, integration and end-to-end scenarios |
 
@@ -34,11 +34,11 @@ Names and paths may follow the implemented workspace layout; boundaries should r
 1. Start infrastructure and apply migrations.
 2. Start API, worker, frontend and demo services.
 3. Confirm readiness and telemetry ingestion.
-4. Generate healthy checkout traffic, trigger the timeout regression and observe a persisted incident.
-5. Investigate, verify a patch, review the approval boundary and reconcile draft PR creation using a dedicated demo repository.
+4. Generate healthy checkout traffic, run both fault scenarios sequentially from clean baselines and observe separate persisted incidents.
+5. Investigate both without ground truth; verify a patch for the client regression, review the approval boundary and reconcile draft PR creation using a dedicated demo repository.
 6. Reset the isolated workload and repeat from a clean environment.
 
-See [checkout runbook](runbooks/DEMO.md) for scenario details.
+See [Incident Lab](INCIDENT_LAB.md) and [scenario runbook](runbooks/DEMO.md) for scenario details.
 
 ## Quality gates
 

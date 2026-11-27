@@ -18,9 +18,14 @@ All endpoints except `/healthz`, `/readyz` and explicitly read-only Replay endpo
 | `POST` | `/v1/proposals/:id/approve` | approve exact version/hash | role-based approval |
 | `POST` | `/v1/proposals/:id/reject` | reject exact proposal version with reason | role-based approval |
 | `POST` | `/v1/proposals/:id/pull-request` | open draft PR after verification and approval | role-based approval + idempotency key |
+| `GET` | `/v1/lab/status` | protected environment readiness and run state | lab operator |
+| `POST` | `/v1/lab/runs` | start allowlisted scenario in configured lab | lab operator; idempotency key |
+| `POST` | `/v1/lab/runs/:id/reset` | stop traffic and restore baseline | lab operator; idempotent |
 | `GET` | `/v1/replay/incidents/:slug` | curated public fixture | anonymous, read-only |
 
 ## API semantics
+
+- Lab endpoints are separately authorized and available only for the configured isolated environment. Start accepts an allowlisted scenario selector and bounded run settings; no arbitrary commands, Git refs or targets. Return 409 for a conflicting active run. Run status excludes scenario ground truth from investigator-facing contracts. Reset is safe to repeat; public replay has no lab mutation endpoints.
 
 - All private reads and writes are scoped to the authorized project and environment. Do not treat an unguessable ID as authorization.
 - Public replay uses only the replay endpoint and a sanitized recording containing presentation-compatible incident, evidence and proposal data. No live endpoint accepts anonymous replay access.

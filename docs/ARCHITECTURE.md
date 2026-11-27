@@ -4,7 +4,13 @@
 
 **Control plane:** Next.js (browser/UI) -> Fastify (authenticated API) -> PostgreSQL (source of truth) + Redis/BullMQ (transient scheduling) -> worker (evidence and AI). External adapters: Alertmanager, Prometheus/Loki/Tempo, GitHub App, model provider, isolated patch runner.
 
-**Data plane:** checkout service exports traces via OTLP to OTel collector and metrics to Prometheus. Prometheus alerts through Alertmanager. Reanimate **does not** sit on the checkout request path.
+**Data plane:** Reanimate Shop storefront calls checkout, which calls payment over real HTTP. Both services export traces via OTLP to OTel collector and metrics to Prometheus. Prometheus alerts through Alertmanager. Reanimate **does not** sit on the checkout request path.
+
+## Incident Lab boundary
+
+A protected lab controller owns bounded traffic, fixed test-service deployment/latency actions, run leases and cleanup. It is separate from the investigator and may never target production. Store scenario ground truth in a private evaluation/control store inaccessible to the worker, provider prompts and evidence retrieval. A generic alert path and neutral environment identifiers serve both scenarios. Real deployed revision receipts and independently measured client/server metrics are permitted evidence; lab fault metadata is not.
+
+The dedicated monitored workload repository is seeded from source included in this project. Evidence retrieval is pinned to actual deployed workload revisions, not this product's scenario docs or test oracle. No arbitrary Git ref or command input from the browser. See [Incident Lab](INCIDENT_LAB.md).
 
 ### Alert-to-investigation sequence
 
@@ -45,7 +51,7 @@ sequenceDiagram
 4. Query Tempo by trace/service/time; resolve selected traces with 5xx spans and downstream timeout statuses.
 5. Query Loki by service and trace ID, with max bytes and line count; keep redacted bounded excerpts.
 6. Look up latest deployment SHA and GitHub Compare API; score candidate changes with temporal proximity + touched service files + diff content.
-7. Create a dependency graph: signals, traces, deploys, commits, hypotheses with source-specific confidence.
+7. Compare client deadline and server processing latency with a pre-failure baseline; preserve evidence of an unchanged checkout revision and missing sources. Create a dependency graph: signals, traces, deploys, commits, hypotheses with source-specific confidence.
 8. Ask LLM for hypotheses using **only** a JSON bundle of hashed evidence references and permitted code context.
 9. Require concrete supporting and contradicting IDs; fail closed when evidence is missing.
 
@@ -96,7 +102,7 @@ A resolved incident may still have an open investigation or pending PR. Recovery
 
 ## Remediation execution boundary
 
-The worker creates proposals but cannot use GitHub write credentials during reasoning or verification. A separate execution boundary consumes an immutable, policy-checked patch and pinned dependency image, with no network or credentials. The privileged PR operation rechecks authorization, verification receipt, patch/base/policy identity and branch freshness before obtaining scoped GitHub write access. An uncertain GitHub result is reconciled by deterministic branch and PR identity before retry.
+The worker requests structured, allowlisted configuration actions supported by evidence; the deterministic patch engine checks current value and pinned base and materializes the diff. The worker creates proposals but cannot use GitHub write credentials during reasoning or verification. A separate execution boundary consumes an immutable, policy-checked patch and pinned dependency image, with no network or credentials. The privileged PR operation rechecks authorization, verification receipt, patch/base/policy identity and branch freshness before obtaining scoped GitHub write access. An uncertain GitHub result is reconciled by deterministic branch and PR identity before retry.
 
 ## Failure and resilience patterns
 

@@ -20,6 +20,10 @@
 
 A single configured project is sufficient for the MVP, but project identity and authorization are mandatory in persistence and API access. Full multi-project administration can follow later. Store proposal bodies and sanitized verification artifacts with bounded size and explicit retention.
 
+## Lab state and provenance
+
+Maintain a durable lab run record (run ID, configured environment, owner, lifecycle, lease/fence, created/expiry timestamps, cleanup status). A separately authorized private control/evaluation record contains scenario selector and expected outcome; no investigator read path or evidence join may expose it. Enforce one active run per lab environment. Store deployment observations independently (service, environment, actual deployed SHA, release identity, observation timestamp, source reference). Do not use lab run ground truth in incident identity or hypothesis ranking.
+
 ## Identity and deduplication
 
 - Alertmanager fingerprint alone is not a global incident ID; the same alert can fire multiple times.

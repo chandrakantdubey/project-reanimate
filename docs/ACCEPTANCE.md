@@ -1,5 +1,15 @@
 # Acceptance and Release Criteria
 
+## Shop and Incident Lab
+
+- [ ] Storefront can submit a real synthetic checkout and show actual outcome without real payment processing or personal data.
+- [ ] Protected lab can start/reset either allowlisted fault, rejects concurrent conflicting runs, bounds traffic and cleans up on expiry.
+- [ ] Both P0 scenarios produce measured checkout failures and genuine alerts from the same generic rule.
+- [ ] Scenario identities, oracle and private control metadata are absent from investigator inputs; repository retrieval is restricted to deployed workload code.
+- [ ] Randomized clean-baseline runs distinguish client timeout regression from downstream degradation, with supporting and contradictory evidence.
+- [ ] Dependency degradation leaves checkout revision unchanged and results in no unsupported timeout patch or PR.
+- [ ] Missing decisive evidence triggers uncertainty or insufficient_evidence and blocks unsupported remediation.
+
 ## Alert detection and incident lifecycle
 
 - [ ] Fresh checkout service emits HTTP metrics and OTLP traces; a healthy period is visible in Prometheus.
@@ -16,7 +26,7 @@
 - [ ] At least three linked evidence artifacts with real source references.
 - [ ] Hypothesis includes evidence IDs and an explicit uncertainty/alternatives section.
 - [ ] Missing evidence yields `insufficient_evidence`, never a fabricated source.
-- [ ] Proposed patch is a real diff pinned to a SHA; isolated tests pass with captured artifacts.
+- [ ] Proposed patch is a real diff pinned to a SHA; the original fails an independent targeted regression test and the patched revision passes it plus mandatory tests with captured artifacts.
 - [ ] No unapproved GitHub side effects. Authorized user explicitly approves exact diff hash.
 - [ ] Draft PR is created in demo repository with explanation and validation results.
 - [ ] Replay is clearly marked and public; live pipeline is separately demonstrated.
@@ -36,7 +46,7 @@
 ## Release readiness
 
 - [ ] Clean-clone setup and documented prerequisites work; CI is green.
-- [ ] Public read-only replay is accessible without credentials.
+- [ ] Public read-only replay for both authentic scenarios is accessible without credentials.
 - [ ] No secrets or private telemetry are exposed in replay, logs or source control.
 - [ ] Integration, security, accessibility and end-to-end checks have observed results.
 - [ ] Known limitations and failure modes are documented.
@@ -48,7 +58,8 @@
 3. Open exact incident; navigate source-correlated evidence and deployment SHA.
 4. Show bounded investigation with evidence-backed RCA.
 5. Inspect patch + verification results, explicitly approve, then open draft PR.
-6. Demonstrate recovery signal after manually applying fix (if time).
+6. Reset and run downstream degradation; show a different diagnosis without a patch.
+7. Demonstrate recovery signal after manually applying fix (P1).
 
 ## Important distinction
 

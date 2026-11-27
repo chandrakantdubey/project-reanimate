@@ -14,6 +14,8 @@ Reanimate brings that work into a single evidence-driven incident workspace. Eve
 
 | Capability | Experience |
 | --- | --- |
+| Incident Lab | Introduce controlled failures into an isolated distributed application and inspect the resulting incidents. |
+| Reanimate Shop | Exercise real checkout/payment HTTP calls using synthetic transactions and genuine telemetry. |
 | Incident detection | Turn real alerts into durable, deduplicated incident records. |
 | Mission Control | Understand affected services, active incidents, severity and integration health. |
 | Incident timeline | Connect errors, traces, logs and deployments in chronological order. |
@@ -41,13 +43,19 @@ flowchart LR
 
 Reanimate separates observed facts from AI interpretation, test validation from service recovery, and public replay from private live operations. It does not automatically merge code, deploy changes or mutate production clusters.
 
-## Explore a checkout incident
+## Experience Reanimate through Incident Lab
 
-A checkout service calls a payment service with approximately 300 ms latency. A deployment reduces its timeout from 800 ms to 100 ms, causing HTTP 5xx responses.
+Reanimate Shop is a small working storefront with instrumented checkout and synthetic payment services. Incident Lab introduces controlled faults into this isolated workload, while Reanimate investigates independently from real metrics, logs, traces and deployed source changes.
 
-The incident workspace connects the error-rate increase to downstream timeout traces, application logs and the deployed commit. The investigation proposes restoring the timeout, validates the correction with regression tests and presents the verified diff for human approval. An approved change becomes a draft GitHub PR.
+| Incident | What changes | Expected outcome |
+| --- | --- | --- |
+| Client timeout regression | Checkout deadline falls from 800 ms to 100 ms; payment remains ~300 ms | Evidence-backed diagnosis, independently tested config correction and authorized draft PR |
+| Dependency degradation | Payment latency increases to ~1500 ms; checkout deadline and revision remain unchanged | Distinguish downstream slowdown, recommend next steps and avoid an unsupported patch |
+| Missing evidence | A material observability source is unavailable | Explicit uncertainty or abstention |
 
-If evidence is missing or validation fails, Reanimate displays the limitation instead of claiming success.
+The first two incidents deliberately produce similar symptoms. The investigator never receives the injected scenario identity or expected answer. Synthetic transactions are not synthetic telemetry: actual requests, failures, alerts, model inference, tests and GitHub operations establish the result.
+
+Explore both recorded investigations in public read-only replay, or run the protected live lab locally. A hosted interactive live lab is a later increment subject to safe isolation.
 
 ## Architecture
 
@@ -70,12 +78,12 @@ Reanimate operates outside the application request path. The observability backe
 
 | Area | Document |
 | --- | --- |
-| Product | [Requirements](docs/PRD.md), [Interface design](docs/design/INTERFACE.md) |
+| Product | [Requirements](docs/PRD.md), [Interface design](docs/design/INTERFACE.md), [Incident Lab and Shop](docs/INCIDENT_LAB.md) |
 | Engineering | [Architecture](docs/ARCHITECTURE.md), [Data model](docs/DATA_MODEL.md), [API contract](docs/API.md) |
 | Intelligence | [Investigation engine](docs/AI_ENGINE.md) |
 | Trust and reliability | [Security](docs/SECURITY.md), [Capacity and operations](docs/CAPACITY_AND_OPERATIONS.md) |
 | Development | [Local environment](docs/LOCAL_DEVELOPMENT.md), [Roadmap](docs/ROADMAP.md) |
-| Validation | [Acceptance criteria](docs/ACCEPTANCE.md), [Checkout incident runbook](docs/runbooks/DEMO.md) |
+| Validation | [Acceptance criteria](docs/ACCEPTANCE.md), [Incident Lab runbook](docs/runbooks/DEMO.md) |
 
 Architecture decisions: [Control plane](docs/adr/0001-control-plane.md) · [Durable scheduling](docs/adr/0002-outbox.md) · [Human approval](docs/adr/0003-human-approval.md).
 

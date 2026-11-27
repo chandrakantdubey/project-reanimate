@@ -10,7 +10,9 @@ Use progressive disclosure: show a clear incident summary first, then make detai
 
 | Route | Screen | Purpose |
 | --- | --- | --- |
-| / | Product entry | Explain the workflow; enter replay or sign in to live mode. |
+| / | Product entry | Explain the workflow; enter replay, explore the Shop or sign in to live mode. |
+| /lab | Incident Lab | Protected isolated run controls, readiness, traffic and reset. |
+| /shop | Reanimate Shop | Browse sample products and submit synthetic checkout; private/local by default. |
 | /incidents | Mission Control | Active and resolved incidents, service/environment filters and integration status. |
 | /incidents/:id | Incident Room | Incident summary, chronological timeline, evidence and investigation. |
 | /incidents/:id/proposals/:proposalId | Remediation Review | Inspect exact diff, checks, test artifacts, approval and draft PR state. |
@@ -18,6 +20,12 @@ Use progressive disclosure: show a clear incident summary first, then make detai
 | /settings | Integration Settings | Private connection status, project scope and permissions; configuration UI may follow the MVP. |
 
 Private screens require authentication; public replay is a separate data boundary. Navigation retains the selected project/environment and incident context. Deep links must open the referenced record or display a meaningful unavailable state.
+
+## Reanimate Shop and Incident Lab
+
+The Shop is a compact functional storefront, not a second full product: product selection, synthetic checkout and actual success/error response. Show a clear no-real-payments label.
+
+The Lab shows readiness, active run, bounded traffic, elapsed duration, measured service status and start/reset controls. Scenario selection is visible only to the lab operator and remains outside investigator context; incident views use neutral titles until evidence supports a diagnosis. Disable conflicting actions during preparation/reset, show failures honestly and link to the incident once it exists. A public viewer can choose recorded scenarios without starting live workloads or writes.
 
 ## Mission Control
 
@@ -45,6 +53,8 @@ Display repository, target branch, base SHA, immutable diff hash, affected files
 Show the confirmed PR URL only after GitHub returns a receipt. Failed or uncertain external operations remain visible and can be reconciled. A validated patch is not a recovered service.
 
 ## Replay experience
+
+Provide a scenario selector for both authentic recordings; each can be inspected with its own timeline, evidence and outcome. Historical scenario description must not be used as live investigation input.
 
 Use a persistent read-only banner with recording time and scenario description. Allow navigation, evidence filtering and inspection of recorded checks. Never connect replay to live credentials, mutate incidents or invoke models. Recorded approval and PR actions are historical artifacts, not executable controls.
 

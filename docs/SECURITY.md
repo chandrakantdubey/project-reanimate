@@ -11,10 +11,16 @@
 7. **Patch runner:** disposable, unprivileged isolated environment; no network, credentials, host sockets or kubeconfig.
 8. **GitHub App:** separately scoped installation token with Contents RW and Pull Requests RW only during the authorized PR phase; metadata read and minimal extra permissions as justified.
 
+## Incident Lab security
+
+The lab controller is an isolated privileged component with only predeclared workload actions, separate authorization, private ground truth storage, serialized run ownership, TTL, traffic quotas and cleanup. The investigator, replay, model and sandbox have no lab control credentials or evaluator access. Never expose host/container orchestration sockets to web or model processes. Prevent arbitrary command, target, revision or image input. Public live lab is not a P0 requirement; enable only with per-session isolation or explicitly serialized access, resource caps and abuse controls. Public replay has no mutations.
+
 ## Threat table
 
 | Threat | Controls | Test |
 | --- | --- | --- |
+| Lab escape / abuse | fixed environment and allowlisted actions, one active run, TTL and rate limits, separate roles | unauthorized target/start rejected; expired run stops traffic |
+| Ground truth leakage | private lab control records; neutral alert labels; bounded deployed source retrieval | input audit confirms no scenario names, oracle or control events |
 | Forged alerts / incident DoS | bearer verification, private routing, 128 KB body limit, rate limiting, per-project mapping | unauthorized webhook 401; oversized 413 |
 | Duplicate or replayed alert | unique event and episode key, deterministic job IDs, state guard | 10 identical deliveries => 1 incident |
 | Prompt injection in log or commit | label all retrieved data as untrusted, schema-only model output, no tools for arbitrary commands, reject source-external evidence | malicious string attempts to bypass approval -> rejected |
