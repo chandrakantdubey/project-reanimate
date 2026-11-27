@@ -1,12 +1,12 @@
 # System Architecture
 
-## Chosen boundaries
+## Product system boundaries
 
 **Control plane:** Next.js (browser/UI) -> Fastify (authenticated API) -> PostgreSQL (source of truth) + Redis/BullMQ (transient scheduling) -> worker (evidence and AI). External adapters: Alertmanager, Prometheus/Loki/Tempo, GitHub App, model provider, isolated patch runner.
 
 **Data plane:** checkout service exports traces via OTLP to OTel collector and metrics to Prometheus. Prometheus alerts through Alertmanager. Reanimate **does not** sit on the checkout request path.
 
-### Sequence for the first meaningful slice
+### Alert-to-investigation sequence
 
 ```mermaid
 sequenceDiagram
@@ -15,15 +15,19 @@ sequenceDiagram
   participant AM as Alertmanager
   participant API as Fastify
   participant DB as PostgreSQL
+  participant D as Outbox dispatcher
   participant Q as BullMQ
   participant W as Worker
   participant UI as Next.js
-  Checkout->>Prom: /metrics scrape
+  Prom->>Checkout: scrape /metrics
   Prom->>AM: high 5xx ratio alert
   AM->>API: authenticated webhook (retries allowed)
-  API->>DB: upsert incident + dedupe event
-  API->>Q: schedule evidence collection
+  API->>DB: commit incident + dedupe event + outbox
+  DB-->>API: durable commit
   API-->>AM: 202 Accepted
+  D->>DB: claim pending outbox
+  D->>Q: enqueue stable job ID
+  D->>DB: record publication
   W->>Q: claim job
   W->>Prom: bounded query_range
   W->>DB: store evidence + event
@@ -42,17 +46,21 @@ sequenceDiagram
 5. Query Loki by service and trace ID, with max bytes and line count; keep redacted bounded excerpts.
 6. Look up latest deployment SHA and GitHub Compare API; score candidate changes with temporal proximity + touched service files + diff content.
 7. Create a dependency graph: signals, traces, deploys, commits, hypotheses with source-specific confidence.
-8. Ask LLM for hypotheses using **only** a JSON bundle of signed/hashed evidence references and permitted code context.
+8. Ask LLM for hypotheses using **only** a JSON bundle of hashed evidence references and permitted code context.
 9. Require concrete supporting and contradicting IDs; fail closed when evidence is missing.
 
 **Do not claim causation from correlation alone.** A suspect commit must be checked against the affected code path and tests.
 
-## Investigation workflow / finite states
+## Workflow and state boundaries
+
+The following diagram is a product journey, not a single database enum. Persist incident, investigation and proposal states independently.
 
 ```mermaid
 stateDiagram-v2
   [*] --> DETECTED
   DETECTED --> COLLECTING
+  COLLECTING --> FAILED
+  ANALYZING --> FAILED
   COLLECTING --> ANALYZING
   ANALYZING --> INSUFFICIENT_EVIDENCE
   ANALYZING --> HYPOTHESIS_READY
@@ -60,19 +68,35 @@ stateDiagram-v2
   PATCH_PROPOSED --> VERIFYING
   VERIFYING --> VALIDATION_FAILED
   VERIFYING --> AWAITING_APPROVAL
-  AWAITING_APPROVAL --> PR_OPENED
+  AWAITING_APPROVAL --> REJECTED
+  AWAITING_APPROVAL --> APPROVED
+  APPROVED --> PR_PENDING
+  PR_PENDING --> PR_OPENED
+  PR_PENDING --> PR_FAILED
+  PR_FAILED --> PR_PENDING
   PR_OPENED --> [*]
   INSUFFICIENT_EVIDENCE --> [*]
   VALIDATION_FAILED --> PATCH_PROPOSED
+  REJECTED --> PATCH_PROPOSED
 ```
 
-The incident has a *separate* lifecycle (`firing`, `acknowledged`, `resolved`); a resolved incident may still have a pending PR.
+Canonical states (lowercase on the wire):
+
+- Incident: `firing`, `acknowledged`, `resolved`.
+- Investigation attempt: `queued`, `collecting`, `analyzing`, `hypothesis_ready`, `insufficient_evidence`, `failed`. Retries create new attempts.
+- Proposal: `patch_proposed`, `verifying`, `validation_failed`, `awaiting_approval`, `rejected`, `approved`, `pr_pending`, `pr_failed`, `pr_opened`, `stale`. A revised patch creates a new immutable proposal; stale proposals cannot be submitted.
+
+A resolved incident may still have an open investigation or pending PR. Recovery verification is a separate observation, not a PR state.
 
 ## Deployment topology
 
-- **Local:** PostgreSQL, Redis, Prometheus, Alertmanager, OTel collector and simulated checkout via Docker Compose; Node processes via pnpm for hot reload. Kind is optional for Kubernetes event correlation.
-- **Public replay:** frontend and read-only API backed by a curated incident replay, without service credentials or arbitrary execution access.
+- **Local:** PostgreSQL, Redis, Prometheus, Alertmanager, OTel collector, Loki, Tempo and instrumented checkout/payment services via Docker Compose; Node processes via pnpm for hot reload. Kind is optional for Kubernetes event correlation.
+- **Public replay:** frontend and read-only API backed by a curated incident replay, without service credentials or arbitrary execution access. Serve only sanitized recorded data through dedicated replay endpoints.
 - **After MVP:** separate private control API, worker with network isolation, managed Postgres/Redis, restricted GitHub App installation and model gateway. Cloud deploy is explicit opt-in.
+
+## Remediation execution boundary
+
+The worker creates proposals but cannot use GitHub write credentials during reasoning or verification. A separate execution boundary consumes an immutable, policy-checked patch and pinned dependency image, with no network or credentials. The privileged PR operation rechecks authorization, verification receipt, patch/base/policy identity and branch freshness before obtaining scoped GitHub write access. An uncertain GitHub result is reconciled by deterministic branch and PR identity before retry.
 
 ## Failure and resilience patterns
 

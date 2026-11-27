@@ -1,71 +1,54 @@
-# Build Plan & Milestones
+# Product Delivery Roadmap
 
-Complete P0 before P1. Deliver vertical slices with observed test results and keep the end-to-end workflow runnable.
+Deliver one complete incident journey before extending the platform to additional workloads or providers. P0 is the initial product release; P1 follows once the core workflow is reliable.
 
-| ID | Deliverable | Exit criteria |
+| Milestone | Product outcome | Exit criteria |
 | --- | --- | --- |
-| M0 | Engineering foundation | monorepo, reproducible install, CI and documented threat model |
-| M1 | Telemetry + incident ingestion | injected checkout regression produces *real* Alertmanager webhook and one persisted incident |
-| M2 | Forensic evidence and timeline | selected logs/traces/metrics + candidate deployment SHA with links and timestamp alignment |
-| M3 | AI investigation | schema-validated, evidence-referenced RCA with missing-evidence branch; prompt injection tests |
-| M4 | Patch and PR | isolated validation with visible tests; explicit approval; draft PR and idempotency checks |
-| M5 | Replay and design polish | publicly accessible replay; functional timeline; responsive typography/accessibility |
-| M6 | Release validation | clean-clone setup, public replay, green CI and end-to-end rehearsal |
+| M0 — Foundation | Reproducible product environment | Workspace, contracts, migrations, CI and safe bootstrap |
+| M1 — Detect | A real alert becomes an incident | Measured checkout failure, authenticated webhook, durable deduplication, incident list/detail |
+| M2 — Understand | An engineer can inspect what happened | Bounded metrics/logs/traces, deployment SHA, evidence explorer and timeline |
+| M3 — Investigate | Evidence-backed hypotheses | Structured output, citations, alternatives, uncertainty and negative tests |
+| M4 — Remediate | A verified change becomes a draft PR | Allowlisted diff, isolated tests, explicit approval, idempotent GitHub integration |
+| M5 — Explore | Usable product experience | Responsive incident room, diff review, accessible public replay |
+| M6 — Release | Repeatable, trustworthy operation | Clean-clone run, green CI, failure-mode tests and observed end-to-end results |
 
-## Sequenced implementation backlog
+## Implementation backlog
 
-### Epic A: Platform and contracts (M0)
-- A1. Monorepo wiring, TypeScript strict, lint/test/build scripts and lockfile.
-- A2. Shared Zod schemas for alert/incident/evidence states with contract tests.
-- A3. PostgreSQL migration and repository abstractions; unique alert episode key.
-- A4. Public replay versus authenticated live mode separation, including API policy.
-- A5. CI: formatting, typecheck, unit tests, audit and secret scan.
-- A6. Local bootstrap script for env/secrets, health checks and deterministic cleanup.
+### M0 — Foundation
+- Strict TypeScript workspace, shared Zod contracts and versioned migrations.
+- Project/service mapping, live authentication, separate replay data boundary.
+- Local configuration validation, health/readiness, dependency and secret scanning.
 
-### Epic B: Live signal (M1)
-- B1. Implement checkout synthetic payment failure with env-configurable timeout and load generator.
-- B2. OTel instrumentation, Prometheus metrics and trace export.
-- B3. Alertmanager webhook authentication, validation and dedupe.
-- B4. Outbox/queue scheduling and worker reconciliation; prove repeated webhooks create one incident.
-- B5. Incident list/detail REST API and frontend incident list with live refresh.
-- B6. E2E test: healthy -> high 5xx -> incident -> resolved (with unique episode ID).
+### M1 — Incident detection
+- Instrument checkout/payment services; generate healthy and failing traffic.
+- Configure telemetry ingestion, Prometheus rules and Alertmanager webhooks.
+- Transactional incident/event/outbox persistence, idempotent worker and reconciliation.
+- Incident list/detail and lifecycle; property-based alert ordering/deduplication tests.
 
-### Epic C: Evidence graph (M2)
-- C1. Query adapters with bounded time/result limits and defensive parsing.
-- C2. Evidence snapshot schema, redaction and source hash/pointer.
-- C3. GitHub App install and deployment correlation (workflow run, release, commit compare).
-- C4. Incident timeline combining alert, deploy, traces, metric anomaly and investigation events.
-- C5. UI causal graph service/deploy/evidence nodes with drilldown.
+### M2 — Evidence and incident workspace
+- Bounded Prometheus, Tempo and Loki adapters; immutable evidence snapshots and redaction.
+- GitHub installation, deployed SHA mapping, compare API and candidate ranking.
+- Chronological event timeline, source drilldown and explicit missing-source states.
 
-### Epic D: Evidence-backed AI (M3)
-- D1. Tool-restricted investigator workflow (collect -> compare -> hypothesize -> challenge -> summarize).
-- D2. Typed output schema with references and `insufficient_evidence` discriminant.
-- D3. Evidence citation validator; reject invented sources and invalid source timestamps.
-- D4. Prompt injection tests from malicious log or README content.
-- D5. Cost caps, request timeouts, retry budgets, model/provider fallback and evaluation fixtures.
+### M3 — Investigation
+- Provider-neutral model adapter, strict discriminated output, evidence validation and budget enforcement.
+- Persist investigation attempts; expose SSE progress and retryable error states.
+- Evaluate timeout regression, missing evidence, unrelated deployment and poisoned source fixtures.
 
-### Epic E: Safe remediation (M4)
-- E1. Repository patch creation restricted to allowlisted paths and diff size.
-- E2. Sandbox checkout pinned to SHA; disable network after dependencies prepared; no host mounts.
-- E3. Test/lint/typecheck regression checks; capture exit codes, patch SHA and artifact references.
-- E4. Approval API with authenticated user, optimistic version and audit event.
-- E5. Draft PR against correct base SHA; idempotent branch naming and GitHub failure retries.
-- E6. Regression tests for failed patch, approval bypass and duplicate triggers.
+### M4 — Remediation
+- Constrained patch proposal, immutable digest and path/content policy.
+- Isolated regression verification, artifact capture, stale-base and policy checks.
+- Role-based approval and rejection; separately authorized, reconciled draft PR creation.
+- Negative tests for failed checks, stale approvals, duplicate requests and sandbox isolation.
 
-### Epic F: Experience and release (M5–M6)
-- F1. Styled incident command center; fast transitions; no decorative fake logs, numbers or stats.
-- F2. Read-only replay, clearly labelled, accessible without credentials.
-- F3. Error/empty states, responsive layout, keyboard support and readable type scale.
-- F4. Deploy, monitor, uptime testing, synthetic smoke test.
-- F5. Verify the complete demo workflow and document observed results.
+### M5–M6 — Experience and release
+- Product entry, Mission Control, Incident Room and Remediation Review.
+- Capture a sanitized, authentic replay; deploy a read-only experience separately from live operations.
+- Validate responsive layouts, keyboard navigation, error states and accessibility.
+- Run repeatable end-to-end scenario and operational failure tests; publish actual limitations.
 
-## Scope protection / decision gates
+## Next product increments
 
-- **Signal pipeline:** if Alertmanager->DB not working, stop UI extras and fix the signal pipeline.
-- **Evidence correlation:** if Tempo/Loki correlation is too unreliable, ship Prometheus + structured app logs first; explicitly mark absent traces as gaps.
-- **Patch quality:** if AI patch quality is unsafe, limit to constrained config diff in checkout demo; don't advertise general code remediation.
-- **Release freeze:** freeze features, fix defects, rehearse. No last-minute agent framework rewrite.
+P1: trace-derived dependency topology, manually deployed fix recovery verification, richer integration setup and evidence search. P2: additional incident scenarios and providers, multi-project operations, SLO intelligence, recurring incident patterns and regional expansion.
 
-## Parallelizable streams
-
-UI structure and diagrams can be built alongside observability; schema/API contracts must land before independent adapter work. AI evaluation fixtures can be authored before provider wiring. PR creation depends on verified patch policy and real approvals.
+Scope decisions: prioritize genuine signals over visual extras; show unavailable sources rather than synthesizing evidence; restrict remediation to the checkout configuration and tests until broader policy and isolation are validated.

@@ -23,7 +23,7 @@ Assume 1,000 incident episodes/day; per-incident curated evidence 50–200 KB, t
 | Prometheus range query | 5 s | 2 attempts, jitter | 20 min max window; max 10 series |
 | Trace/log backend retrieval | 5 s each | 2 attempts | 200 spans/400 lines |
 | GitHub compare/deploy lookup | 7 s | 2 with Retry-After | max 10 changed candidate commits |
-| LLM investigation | 30 s/call | 1–2 transient retries | max 2 analysis calls + 1 repair |
+| LLM investigation | 30 s/call | within total budget | max 2 analysis attempts + 1 repair attempt, retries included |
 | Sandbox patch verification | 120 s | one manual retry for infrastructure | 1 CPU, 1 GiB, 128 processes (initial target) |
 | GitHub PR create | 10 s | reconcile before retry | unique repo/base/diff key |
 
@@ -31,7 +31,7 @@ Under excess alerts, shed optional enrichments before dropping authoritative inc
 
 ## Caching and consistency
 
-- Redis caches immutable GitHub commit/diff lookups by SHA (TTL 1 day) and telemetry query results by bounded UTC window (TTL 2 min) but never approvals or authoritative incident state.
+- Redis caches immutable GitHub commit/diff lookups by project, repository and SHA (TTL 1 day) and telemetry query results by project, source, query and bounded UTC window (TTL 2 min) but never approvals or authoritative incident state.
 - Postgres transactions and unique indexes enforce incident and outbox consistency. Delivery to Redis and GitHub remains at-least-once with deterministic idempotency.
 - SSE consumers catch up from Postgres event sequence; Redis pub/sub is optional acceleration, never storage.
 - SLO: availability target of API 99.9% after real deployment; RTO 2 hours and RPO 15 minutes for initial noncritical demo environment, to be validated with actual backups and restore test.
@@ -39,6 +39,10 @@ Under excess alerts, shed optional enrichments before dropping authoritative inc
 ## Security/region topology
 
 Single write-primary region first. If multi-region later, assign each project a home region; route mutations there and use read replicas + backup restore elsewhere. Do not attempt active-active incident mutation without conflict-resolution design. Restrict outbound adapters to allowlisted endpoints; never expose raw kubeconfig to workers.
+
+## Operational controls
+
+Expose integration health, queue age, oldest pending action, provider availability and investigation spend to operators. Preserve alert ingestion when optional AI enrichment is unavailable. Provide bounded retry/reconciliation, explicit terminal failure and authorized retry. Backups must include durable state and evidence artifacts; verify restoration and rebuild queue work from durable intent and completion receipts.
 
 ## Monitoring the monitor
 

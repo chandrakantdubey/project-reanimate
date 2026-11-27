@@ -5,7 +5,7 @@
 
 ## Context
 
-Need asynchronous incident ingestion, traceability and agent workflows, but time is short and there is a single demonstration environment.
+Incident ingestion must remain available while investigations perform slow provider calls and verification. A compact control plane minimizes distributed coordination while preserving clear trust boundaries.
 
 ## Decision
 

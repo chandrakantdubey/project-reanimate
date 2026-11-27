@@ -1,7 +1,20 @@
 # Product Requirements — Project Reanimate
 
-**Version:** v0.1 / 2026-11-19  
 **Primary personas:** on-call SRE, platform engineer, backend engineer, public replay viewer
+
+## Product vision
+
+Reanimate is the investigation and remediation layer above existing monitoring tools. It reduces context switching during incidents by connecting operational signals to source changes and turning a diagnosis into a reviewable engineering action.
+
+## Users
+
+| Persona | Primary need |
+| --- | --- |
+| On-call engineer | Rapid triage, credible evidence and a clear next action |
+| Platform/SRE engineer | Reliable alert processing, reproducibility and safe permissions |
+| Service owner | Understand a suspect deployment and review a tested patch |
+| Reviewer | Inspect validation, approval and audit history |
+| Replay viewer | Explore a genuine incident without connecting infrastructure |
 
 ## Product promise
 
@@ -17,9 +30,9 @@ A deterministic alert becomes a traceable investigation with sourced hypotheses 
 
 ## MVP user journey
 
-- Operator enters public Replay Mode without credentials (read-only, labelled as a replay).
-- They can inspect an authentic recorded checkout regression; real demo cluster uses the same API schema.
-- A live Alertmanager `firing` webhook creates exactly one incident per alert episode; repeats are deduplicated.
+- A viewer enters public Replay Mode without credentials (read-only, labelled as a replay).
+- They can inspect an authentic recorded checkout regression; the live environment uses the same presentation contracts but separate data access.
+- In authenticated Live Mode, an Alertmanager `firing` webhook creates exactly one incident per alert episode; repeats are deduplicated.
 - An investigation links error metrics, selected trace/log snippets and a recent GitHub deployment.
 - Evidence references open exact timestamps and corresponding source locations.
 - A structured hypothesis distinguishes observed facts from inference; uncertainty is visible.
@@ -41,30 +54,32 @@ A deterministic alert becomes a traceable investigation with sourced hypotheses 
 
 ## Priorities / functional requirements
 
-### P0 — required for compelling demo
+### P0 — core product
 
 - **FR-01 Ingestion:** API validates an authenticated Alertmanager webhook, size-limits payload, normalizes alert identity and rejects malformed requests.
 - **FR-02 Deduplication:** At-least-once repeated events for same alert episode must not create duplicate incidents or investigations.
 - **FR-03 Lifecycle:** Incident state transitions are validated and persisted; resolved alerts close active incidents but history remains searchable.
 - **FR-04 Evidence:** Investigation stores source URI, bounded query, UTC time range, capture timestamp, redaction metadata and stable ID for every collected signal.
 - **FR-05 GitHub correlation:** Deployment SHA and timestamp are inspected within a configurable 30-minute window, with multiple candidate changes preserved.
-- **FR-06 AI analysis:** Model returns schema-validated hypothesis objects, a confidence range, supporting/contradicting evidence IDs and an explicit `insufficient_evidence` outcome.
-- **FR-07 Verification:** Proposed patch must pass allowlisted-path policy and isolated build/tests before `ready_for_review` state.
-- **FR-08 Approval:** An authenticated human reviews full diff and initiates draft-PR creation; no background agent may bypass this step.
+- **FR-06 AI analysis:** Model returns schema-validated hypothesis objects, a heuristic confidence label, supporting/contradicting evidence IDs and an explicit `insufficient_evidence` outcome.
+- **FR-07 Verification:** Proposed patch must pass allowlisted-path policy and isolated build/tests before `awaiting_approval` state.
+- **FR-08 Approval:** An authorized human approves the exact verified diff, base SHA and policy version, then separately requests draft-PR creation; no background agent may bypass this step.
 - **FR-09 UX:** The incident workspace renders accurate state and evidence, with loading/error states, keyboard access and replay labels.
 - **FR-10 Replay:** Public replay uses captured data, no privileged connections, and visible indication that it is a replay.
 - **FR-11 Audit:** Every critical state transition and external action records who/what caused it and its correlation ID.
 
-### P1 — if P0 is complete early
+- **FR-12 Progress:** Persist investigation events, support SSE resume and polling fallback; expose failed and retryable states.
+- **FR-13 Integration health:** Show connection availability, last successful collection and source-specific errors without exposing secrets.
+
+### P1 — product expansion
 
 - OpenTelemetry service topology and dependency graph using real traces.
-- WebSocket/SSE partial investigation updates.
 - Verified recovery signal after an approved fix is manually deployed.
 - Basic policy editor and repository installation UI.
 
 ### P2 — future scope
 
-Multi-tenant RBAC, several providers/cluster integrations, incident search, SLO budgets, cross-region handling, risk-based auto-approval, incident learning, change replay and anomaly detection.
+Multi-tenant RBAC, several providers/cluster integrations, incident search, SLO budgets, cross-region handling, incident learning, change replay and anomaly detection.
 
 ## Nonfunctional requirements (targets, not current claims)
 
@@ -80,13 +95,17 @@ Multi-tenant RBAC, several providers/cluster integrations, incident search, SLO 
 | Observability | logs/metrics/traces for API, worker, webhook, AI and PR creation |
 | Accessibility | keyboard navigation and WCAG AA contrast in core workflows |
 
-## Metrics
+## Product success metrics
 
 - **Time to first useful hypothesis:** detection -> evidence-backed first hypothesis.
 - **Evidence coverage:** supporting IDs linked to persisted, accessible signals.
 - **Fix success:** validation pass plus separate post-deploy recovery verification.
-- **False confidence:** investigations that return insufficient evidence rather than unsupported certainty.
+- **Abstention quality:** correct insufficient-evidence outcomes on missing-source fixtures and unsupported-claim rate.
 - **Side-effect safety:** zero unapproved PR creations and production mutations.
+
+## Product boundaries
+
+Live operations are private; replay is public and read-only. A healthy system does not require an LLM to ingest or display alerts. A rejected or failed patch cannot create a PR. The MVP does not automatically merge, deploy, roll back or mutate clusters.
 
 ## Assumptions and constraints
 

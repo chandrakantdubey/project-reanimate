@@ -9,7 +9,7 @@
 5. **Repository contents:** source, issues, commit messages and README files are untrusted model input.
 6. **Model output:** treated as *suggestions*, not authority; typed schema & evidence validator required.
 7. **Patch runner:** disposable, unprivileged isolated environment; no network, credentials, host sockets or kubeconfig.
-8. **GitHub App:** separately scoped installation token with Contents RW and Pull Requests RW only during PR phase; metadata read and minimal extra permissions as justified.
+8. **GitHub App:** separately scoped installation token with Contents RW and Pull Requests RW only during the authorized PR phase; metadata read and minimal extra permissions as justified.
 
 ## Threat table
 
@@ -31,12 +31,20 @@
 - Never run generative shell commands; enforce a predefined test command mapping per repository.
 - Before verification, show exact diff, base SHA, changed-file list, policy checks and diff hash.
 - Verification runner: nonroot, read-only root filesystem where possible, cap CPU/memory/time, isolated filesystem, egress off, no cloud credentials, no Kubernetes privileges.
-- Any change to diff invalidates previous verification and approval.
+- Any change to diff, base commit or policy version invalidates previous verification and approval. Recheck target-branch freshness immediately before PR creation.
 - Human clicks approve and opens PR separately; no direct merge or deploy.
+
+## Execution and authorization controls
+
+- Treat the verification runner as hostile-code execution, not an ordinary application container. Use a dedicated isolated execution environment with enforced egress denial, no host mounts/sockets, dropped capabilities, resource limits and a pinned dependency image. Do not expose an arbitrary public execution endpoint.
+- Validate canonical paths, symlinks, file types, rename/delete operations and patch size before application. Reject edits to mandatory test harnesses, dependency manifests, build scripts, workflows and runner configuration.
+- Run mandatory independent regression tests, not solely tests supplied by the model.
+- Check project scope, role, proposal state and verification identity server-side at every mutation. Record approval/rejection separately from PR creation.
+- Public replay is exported through a redaction and secret-scanning gate and served separately from live integration credentials.
 
 ## Auth strategy
 
-Initial public demo may use an **isolated read-only replay** without authentication. Live mode must use OIDC or another established auth provider prior to production exposure; no fake local user/role switcher is a security boundary. For an isolated localhost smoke test, use private development-only secrets via `.env` and never ship an open privileged endpoint.
+Public replay may use an **isolated read-only replay** without authentication. Live mode must use OIDC or another established auth provider prior to production exposure; no fake local user/role switcher is a security boundary. For an isolated localhost smoke test, use private development-only secrets via `.env` and never ship an open privileged endpoint.
 
 ## Audit and privacy
 

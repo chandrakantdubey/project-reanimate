@@ -1,8 +1,8 @@
-# AI Investigation Protocol and Evaluation
+# Investigation Intelligence
 
 ## Core approach: deterministic gathering, constrained interpretation
 
-A generic autonomous agent with shell, kubeconfig and GitHub writes is inappropriate. The engineer's important work is selecting credible signals, calculating timelines and checking hypotheses. Code performs deterministic gathering/scoring; the LLM interprets a bounded evidence bundle and proposes tests/patches subject to policy.
+The investigation engine turns a bounded incident context into explainable hypotheses. Code performs deterministic gathering/scoring; the LLM interprets a bounded evidence bundle and proposes tests/patches subject to policy.
 
 ### Pipeline
 
@@ -14,7 +14,7 @@ A generic autonomous agent with shell, kubeconfig and GitHub writes is inappropr
 6. **Independent verification:** validate evidence IDs and timestamps, run hypothesis-specific tests and detect contradictions. The UI distinguishes analysis from confirmed facts.
 7. **Patch proposal:** constrained diff only after evidence threshold and operator request, separate from sandbox and approval.
 
-### RCA output contract (planned)
+### Hypothesis output contract
 
 ```json
 {
@@ -22,7 +22,7 @@ A generic autonomous agent with shell, kubeconfig and GitHub writes is inappropr
   "investigationId": "c8d2...",
   "hypotheses": [{
     "summary": "Payment timeout configured shorter than observed downstream latency",
-    "confidence": 0.83,
+    "confidence": "high",
     "supportingEvidenceIds": ["ev-metric-01", "ev-trace-02", "ev-commit-04"],
     "contradictingEvidenceIds": [],
     "alternatives": ["Payment service itself slowed after deploy"],
@@ -32,7 +32,7 @@ A generic autonomous agent with shell, kubeconfig and GitHub writes is inappropr
 }
 ```
 
-This is an **illustrative target schema, not current model output**. Confidence numbers are heuristic labels until evaluation/calibration; never present them as mathematically validated probabilities. The alternative outcome is `{"outcome":"insufficient_evidence","missingSources":[...],"nextActions":[...]}`.
+Example response. Confidence is a heuristic label (`low`, `medium`, `high`), not a calibrated probability. The alternative outcome is `{"outcome":"insufficient_evidence","missingSources":[...],"nextActions":[...]}`.
 
 ## Evidence scoring constraints
 
@@ -44,9 +44,15 @@ All components in [0,1], all candidates shown, exact SHA and time included. A sc
 
 ## Provider adapter
 
-Model provider must support JSON schema/structured output or produce JSON validated by Zod. Use 20–30-second per-call timeout, max 2 investigation calls and 1 repair call, configurable token ceiling, error classification and bounded exponential backoff for transient 429/5xx. Never retry schema-invalid content without recording previous failure.
+Model provider must support JSON schema/structured output or produce JSON validated by Zod. Use 20–30-second per-call timeout, max 2 investigation attempts and 1 schema repair attempt including retries, configurable token ceiling, error classification and bounded exponential backoff for transient 429/5xx. Never retry schema-invalid content without recording previous failure.
 
-Estimated budget for a single incident: collect ~100 KB telemetry from providers then curate a 15–30 KB prompt, up to 2–3 model calls; track prompt/completion tokens and actual provider pricing. Set default per-incident spend cap in config rather than claiming a hard dollar estimate across changing providers.
+Estimated budget for a single incident: collect ~100 KB telemetry from providers then curate a 15–30 KB prompt, at most 3 total model calls including retries; track prompt/completion tokens and actual provider pricing. Set default per-incident spend cap in config rather than claiming a hard dollar estimate across changing providers.
+
+## Evidence and proposal eligibility
+
+A hypothesis must cite supporting evidence from the active investigation, describe alternatives and state material gaps. Validate referenced IDs, source provenance and timestamp ranges; citation validity is necessary but does not prove logical correctness. If essential signals are missing or inconsistent, return insufficient_evidence rather than generating a patch.
+
+For the checkout scenario, a proposed timeout change requires observed error/timeout telemetry and a matching deployed code/config change. Policy accepts only the configured timeout file and associated regression tests. Use an independently predefined test oracle for the original failing and corrected cases; model-generated tests cannot replace mandatory checks. Store input hash, provider/model version, output, validation result, token usage and sanitized errors for each attempt.
 
 ## Evaluation fixtures
 

@@ -1,65 +1,87 @@
 # Project Reanimate
 
-> Autonomous incident investigation. Human-approved recovery.
+**From production alert to verified fix.**
 
-Project Reanimate is an AI-powered reliability engineering platform that connects application telemetry, infrastructure events and source code to turn alerts into evidence-backed investigations and verified remediation proposals.
+Reanimate is an AI-powered incident investigation and remediation platform for software engineering and reliability teams. It connects operational telemetry with deployment history and source code, helping engineers understand what broke, why it broke and what change could resolve it — without handing production control to an AI agent.
 
-## Core workflow
+## Why Reanimate?
 
-1. Detect a service failure through Prometheus and Alertmanager.
-2. Persist and deduplicate the incident.
-3. Correlate metrics, logs, traces and GitHub deployment history.
-4. Generate ranked root-cause hypotheses with evidence, alternatives and explicit uncertainty.
-5. Propose a minimally scoped patch and validate it in an isolated sandbox.
-6. Obtain explicit human approval and open an idempotent draft pull request.
+An alert tells you that something is wrong, not necessarily why. Engineers must navigate dashboards, traces, logs and repositories, reconstruct a timeline, test hypotheses and translate the diagnosis into a safe change.
 
-The platform never automatically merges, deploys or modifies production infrastructure.
+Reanimate brings that work into a single evidence-driven incident workspace. Every diagnosis can be challenged, every proposed change can be inspected, and every external write requires explicit authorization.
+
+## Product capabilities
+
+| Capability | Experience |
+| --- | --- |
+| Incident detection | Turn real alerts into durable, deduplicated incident records. |
+| Mission Control | Understand affected services, active incidents, severity and integration health. |
+| Incident timeline | Connect errors, traces, logs and deployments in chronological order. |
+| Evidence explorer | Inspect bounded source excerpts, timestamps, trace identifiers and commit diffs. |
+| AI investigation | Review ranked hypotheses, supporting and contradictory evidence, and uncertainty. |
+| Remediation review | Inspect a minimal patch, policy checks and isolated test results. |
+| GitHub integration | Open a draft pull request after an authorized engineer approves the exact verified change. |
+| Incident replay | Explore a recorded investigation in a public read-only environment. |
+
+## From failure to recovery
+
+```mermaid
+flowchart LR
+    A[Service failure] --> B[Alert]
+    B --> C[Incident]
+    C --> D[Evidence]
+    D --> E[Hypotheses]
+    E --> F[Patch proposal]
+    F --> G[Isolated tests]
+    G --> H{Human approval}
+    H -->|Approved| I[Draft pull request]
+    H -->|Rejected| J[Review or revise]
+    I -. Manual deployment .-> K[Recovery monitoring]
+```
+
+Reanimate separates observed facts from AI interpretation, test validation from service recovery, and public replay from private live operations. It does not automatically merge code, deploy changes or mutate production clusters.
+
+## Explore a checkout incident
+
+A checkout service calls a payment service with approximately 300 ms latency. A deployment reduces its timeout from 800 ms to 100 ms, causing HTTP 5xx responses.
+
+The incident workspace connects the error-rate increase to downstream timeout traces, application logs and the deployed commit. The investigation proposes restoring the timeout, validates the correction with regression tests and presents the verified diff for human approval. An approved change becomes a draft GitHub PR.
+
+If evidence is missing or validation fails, Reanimate displays the limitation instead of claiming success.
 
 ## Architecture
 
-| Component | Technology |
+| Layer | Technology |
 | --- | --- |
-| Web application | Next.js, TypeScript |
-| Control API | Fastify |
-| Persistence | PostgreSQL |
-| Background processing | Redis, BullMQ, transactional outbox |
-| Observability | OpenTelemetry, Prometheus, Alertmanager, Loki, Tempo |
-| Source control | GitHub App |
-| Investigation | Provider-neutral LLM adapter, structured output |
-| Local environment | Docker Compose, optional Kubernetes/Kind |
+| Product interface | Next.js, TypeScript |
+| Control API | Fastify, Zod |
+| Durable state | PostgreSQL |
+| Asynchronous investigation | Redis, BullMQ, transactional outbox |
+| Telemetry | OpenTelemetry, Prometheus, Loki, Tempo |
+| Alert ingestion | Alertmanager |
+| Source and deployment context | GitHub App |
+| AI reasoning | Provider-neutral structured-output adapter |
+| Validation | Isolated, credential-free patch runner |
+| Local infrastructure | Docker Compose; optional Kubernetes/Kind |
 
-## MVP scenario
-
-An instrumented checkout service calls a payment service with approximately 300 ms latency. A deployment changes the checkout timeout from 800 ms to 100 ms, causing measurable HTTP 5xx failures. Reanimate detects the incident, correlates telemetry with the deployment, proposes a timeout correction, runs regression tests and opens a draft PR after approval.
-
-A public read-only replay provides access to an authentic recorded investigation without exposing private integrations or credentials.
+Reanimate operates outside the application request path. The observability backends remain the source of raw telemetry; PostgreSQL stores incident state and bounded evidence snapshots.
 
 ## Documentation
 
-| Document | Purpose |
+| Area | Document |
 | --- | --- |
-| [Product requirements](docs/PRD.md) | Scope, workflows and functional requirements |
-| [Architecture](docs/ARCHITECTURE.md) | Components, data flow, lifecycle and resilience |
-| [Data model](docs/DATA_MODEL.md) | Persistence, consistency and retention |
-| [API contract](docs/API.md) | Endpoints, authentication and payloads |
-| [AI investigation](docs/AI_ENGINE.md) | Evidence collection, reasoning and evaluation |
-| [Security](docs/SECURITY.md) | Threat model, isolation and approval policy |
-| [Capacity and operations](docs/CAPACITY_AND_OPERATIONS.md) | Resource budgets, scaling and recovery |
-| [Interface design](docs/design/INTERFACE.md) | Mission Control and incident review |
-| [Local development](docs/LOCAL_DEVELOPMENT.md) | Development environment requirements |
-| [Roadmap](docs/ROADMAP.md) | Ordered implementation milestones |
-| [Acceptance criteria](docs/ACCEPTANCE.md) | Testable release requirements |
-| [Demo runbook](docs/runbooks/DEMO.md) | Reproducible end-to-end scenario |
+| Product | [Requirements](docs/PRD.md), [Interface design](docs/design/INTERFACE.md) |
+| Engineering | [Architecture](docs/ARCHITECTURE.md), [Data model](docs/DATA_MODEL.md), [API contract](docs/API.md) |
+| Intelligence | [Investigation engine](docs/AI_ENGINE.md) |
+| Trust and reliability | [Security](docs/SECURITY.md), [Capacity and operations](docs/CAPACITY_AND_OPERATIONS.md) |
+| Development | [Local environment](docs/LOCAL_DEVELOPMENT.md), [Roadmap](docs/ROADMAP.md) |
+| Validation | [Acceptance criteria](docs/ACCEPTANCE.md), [Checkout incident runbook](docs/runbooks/DEMO.md) |
 
-### Architecture decisions
+Architecture decisions: [Control plane](docs/adr/0001-control-plane.md) · [Durable scheduling](docs/adr/0002-outbox.md) · [Human approval](docs/adr/0003-human-approval.md).
 
-- [Modular control plane](docs/adr/0001-control-plane.md)
-- [Transactional outbox](docs/adr/0002-outbox.md)
-- [Human-approved remediation](docs/adr/0003-human-approval.md)
+## Status
 
-## Development status
-
-The documents describe the intended implementation and acceptance criteria. They are not claims of currently available features.
+In development. The capabilities above describe the product scope; the repository currently contains the product and engineering specifications.
 
 ## License
 
